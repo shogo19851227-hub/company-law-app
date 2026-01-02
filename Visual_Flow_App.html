@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visual Flow - 企業法フロー図</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #ffffff; color: #333; -webkit-tap-highlight-color: transparent; }
+        
+        /* Navigation Bar */
+        .nav-link { opacity: 0.7; transition: all 0.2s; padding: 0.5rem 0.8rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .nav-link:hover { opacity: 1; background-color: rgba(255,255,255,0.1); }
+        .nav-link.active { opacity: 1; background-color: rgba(255,255,255,0.2); font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+        
+        @media (max-width: 768px) {
+            .nav-text { display: none; }
+            .nav-link { padding: 0.5rem; }
+        }
+
+        /* Diagram Styles */
+        .mermaid { 
+            display: flex; justify-content: center; background: #f8fafc; 
+            padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; 
+            min-height: 200px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        }
+
+        /* 脳科学的強調スタイル */
+        .highlight { background: linear-gradient(transparent 60%, #fef08a 60%); font-weight: 700; padding: 0 2px; border-radius: 2px; }
+        strong { color: #1e40af; font-weight: 700; }
+        .isolation-effect { border: 2px solid #ef4444; background-color: #fef2f2; padding: 0.75rem; margin: 0.8rem 0; border-radius: 0.5rem; position: relative; font-size: 0.95em; }
+        .isolation-icon { position: absolute; top: -12px; left: 10px; background: #fff; padding: 0 5px; font-weight: bold; color: #ef4444; font-size: 0.8em; border: 1px solid #ef4444; border-radius: 4px; }
+        .irac-label { font-weight: bold; color: #475569; display: inline-block; width: 60px; font-size: 0.85em; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 text-white shadow-md flex-shrink-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-project-diagram text-blue-400"></i> <span class="hidden sm:inline">Visual Flow</span>
+            </h1>
+            <nav class="flex gap-1 sm:gap-2 text-sm">
+                <a href="Structure_Navigator.html" class="nav-link"><i class="fas fa-list-ul"></i> <span class="nav-text">目次</span></a>
+                <a href="Visual_Flow_App.html" class="nav-link active"><i class="fas fa-project-diagram"></i> <span class="nav-text">図解</span></a>
+                <a href="flashcards.html" class="nav-link"><i class="fas fa-layer-group"></i> <span class="nav-text">暗記</span></a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+        
+        <!-- Settings (Accordion on Mobile) -->
+        <div class="w-full md:w-64 bg-gray-50 border-b md:border-r border-gray-200 flex-shrink-0 overflow-y-auto max-h-[40vh] md:max-h-full">
+            <details class="group p-4 md:block open:bg-white md:open:bg-transparent" id="settingsDetails">
+                <summary class="flex justify-between items-center font-bold cursor-pointer list-none md:hidden text-gray-700">
+                    <span><i class="fas fa-cog mr-2"></i>設定・論点</span>
+                    <span class="transition group-open:rotate-180"><i class="fas fa-chevron-down"></i></span>
+                </summary>
+                
+                <div class="mt-4 md:mt-0 flex flex-col gap-4">
+                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">TOPIC</label>
+                        <div id="currentTopicDisplay" class="font-bold text-blue-800 text-sm mb-1 leading-tight">未選択</div>
+                        <div id="currentRankDisplay" class="text-xs text-gray-500">Rank -</div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-500 mb-2">API SETTINGS</label>
+                        <div id="sharedKeyStatus" class="hidden text-xs text-green-600 mb-2 font-bold"><i class="fas fa-link mr-1"></i>連携済み</div>
+                        <input type="password" id="apiKey" placeholder="Gemini API Key" class="w-full p-2 text-xs border rounded mb-2 bg-gray-50">
+                        <button onclick="generateFlow()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-xs transition shadow-sm">
+                            <i class="fas fa-sync-alt mr-1"></i> 再生成
+                        </button>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-4 md:p-6 overflow-y-auto bg-white">
+            <div id="loading" class="hidden flex flex-col items-center justify-center h-64">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-500 text-sm animate-pulse" id="loadingText">AIが構造を解析中...</p>
+                <p class="text-xs text-gray-400 mt-2 truncate max-w-xs text-center">論点: <span id="loadingTopic"></span></p>
+            </div>
+
+            <div id="contentArea" class="hidden max-w-4xl mx-auto">
+                <h2 id="flowTitle" class="text-xl md:text-2xl font-bold mb-4 text-gray-800 border-b pb-2 leading-tight"></h2>
+                
+                <div id="mermaidContainer" class="mb-8">
+                    <!-- Mermaid Diagram -->
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-700 mb-3 flex items-center"><i class="fas fa-search text-blue-500 mr-2"></i> IRAC分析</h3>
+                        <div id="iracContent" class="text-sm text-gray-600 space-y-3"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-700 mb-3 flex items-center"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> メタファー理解</h3>
+                        <div id="metaphorContent" class="text-sm text-gray-600 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="emptyState" class="flex flex-col items-center justify-center h-64 text-gray-400">
+                <i class="fas fa-project-diagram text-4xl mb-3"></i>
+                <p class="text-sm">Navigatorから論点を選択してください</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 安定化設定: htmlLabels: false, strict mode
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'strict', flowchart: { htmlLabels: false, useMaxWidth: true } });
+
+        window.addEventListener('load', async () => {
+            const topic = localStorage.getItem('gemini_tutor_topic');
+            const rank = localStorage.getItem('gemini_tutor_rank');
+            const sharedKey = localStorage.getItem('gemini_api_key');
+            if(sharedKey) {
+                document.getElementById('apiKey').value = sharedKey;
+                document.getElementById('sharedKeyStatus').classList.remove('hidden');
+            }
+            if (topic) {
+                document.getElementById('currentTopicDisplay').innerText = topic;
+                document.getElementById('currentRankDisplay').innerText = rank ? `Rank ${rank}` : 'Rank -';
+                document.getElementById('emptyState').classList.add('hidden');
+                
+                if(window.innerWidth < 768) document.getElementById('settingsDetails').removeAttribute('open');
+                
+                await generateFlow();
+            } else {
+                if(window.innerWidth < 768) document.getElementById('settingsDetails').setAttribute('open', '');
+            }
+        });
+
+        function getMockData(topic) {
+            return {
+                mermaid: `graph TD\n A["${topic}の開始"] --> B{Check}\n B -->|Yes| C["有効"]\n B -->|No| D["無効/取消"]`,
+                irac: {
+                    issue: `<strong>${topic}</strong>における<span class='highlight'>法的争点</span>は何か？`,
+                    rule: "会社法は<strong>取引安全</strong>と<strong>株主保護</strong>の調和を図る。",
+                    application: "本件特有の事情を考慮し適用する。",
+                    conclusion: "原則として<span class='highlight'>有効</span>に扱われる。"
+                },
+                metaphor: `<strong>${topic}</strong>は「${topic}」という<span class='highlight'>建物</span>のようなものです。基礎（要件）がしっかりしていないと倒壊（無効）します。`
+            };
+        }
+
+        async function generateFlow() {
+            const topic = localStorage.getItem('gemini_tutor_topic') || document.getElementById('currentTopicDisplay').innerText;
+            const apiKey = localStorage.getItem('gemini_api_key') || document.getElementById('apiKey').value;
+
+            if (!topic || topic === "未選択") { alert("論点が選択されていません"); return; }
+            if(window.innerWidth < 768) document.getElementById('settingsDetails').removeAttribute('open');
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loadingText').innerText = "AIが構造を解析中...";
+            document.getElementById('loadingTopic').innerText = topic;
+            document.getElementById('contentArea').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+
+            if (apiKey) {
+                try {
+                    const prompt = `
+                    あなたは公認会計士試験「企業法」の講師です。
+                    論点:「${topic}」について、初学者が直感的に理解できるフロー図と解説を作成してください。
+                    
+                    **【参照基準】**
+                    名称: e-Gov法令検索 URL: https://elaws.e-gov.go.jp/ (会社法)
+
+                    **【脳科学的デザイン要件】**
+                    解説文には以下のHTMLタグを使用してください。
+                    1. **重要キーワード**: <strong>タグ
+                    2. **核心的概念**: <span class='highlight'>タグ
+                    3. **孤立効果**: <div class='isolation-effect'><span class='isolation-icon'⚠️ 注意</span>内容</div>
+                    ※重要: HTML属性は必ずシングルクォート(')を使用すること（例: class='highlight'）。
+                    
+                    **【Mermaid絶対安定ルール】**
+                    1. **ノードID**: 英数字のみ（日本語禁止）。
+                    2. **日本語ラベル**: 必ず ["ラベル"] の形式で書くこと。
+                    3. **分岐ノード**: {} の中は英数字IDのみ（日本語禁止）。
+                    4. **改行**: 各行は必ずJSONのエスケープ改行(\\n)で区切ること。
+                    5. **禁止事項**: セミコロン(;)、style、classDefは使用しないこと。
+                    6. **開始**: graph TD から必ず開始すること。
+                    
+                    **出力フォーマット (JSONのみ):**
+                    {
+                        "mermaid": "graph TD\\n A[\\"開始\\"] --> B{Dec1}\\n B -->|\\"Yes\\"| C[\\"有効\\"]\\n B -->|\\"No\\"| D[\\"無効\\"]",
+                        "irac": {
+                            "issue": "法的争点（HTMLタグ含む）",
+                            "rule": "規範（HTMLタグ含む）",
+                            "application": "あてはめ（HTMLタグ含む）",
+                            "conclusion": "結論（HTMLタグ含む）"
+                        },
+                        "metaphor": "物理的メタファーを用いた簡潔な説明（HTMLタグ含む）"
+                    }
+                    `;
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+
+                    const data = await response.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if(text) {
+                        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const result = JSON.parse(jsonStr);
+                        // ここでapiKeyを渡して描画関数を呼ぶ
+                        await renderFlow(topic, result, apiKey);
+                    } else { throw new Error("No data returned"); }
+
+                } catch (e) {
+                    console.error(e);
+                    alert("AI生成エラー。デモデータを表示します。");
+                    await renderFlow(topic, getMockData(topic), null);
+                }
+            } else {
+                setTimeout(async () => { await renderFlow(topic, getMockData(topic), null); }, 1000);
+            }
+        }
+
+        // 自動修復機能付きの描画関数
+        async function renderFlow(title, data, apiKey) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('contentArea').classList.remove('hidden');
+            document.getElementById('flowTitle').innerText = title;
+            
+            const mContainer = document.getElementById('mermaidContainer');
+            mContainer.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'mermaid';
+            mContainer.appendChild(div);
+
+            // 解説文の更新
+            document.getElementById('iracContent').innerHTML = `
+                <div><span class="irac-label">Issue:</span> ${data.irac.issue}</div>
+                <div><span class="irac-label">Rule:</span> ${data.irac.rule}</div>
+                <div><span class="irac-label">App:</span> ${data.irac.application}</div>
+                <div><span class="irac-label">Conc:</span> ${data.irac.conclusion}</div>
+            `;
+            document.getElementById('metaphorContent').innerHTML = data.metaphor;
+
+            try {
+                // 通常描画
+                const id = 'mermaid-svg-' + Date.now();
+                const { svg } = await mermaid.render(id, data.mermaid);
+                div.innerHTML = svg;
+            } catch (e) {
+                console.error("Mermaid Render Error:", e);
+                
+                // --- 自動修復ロジック (Auto-Repair) ---
+                if (apiKey) {
+                    mContainer.innerHTML = `<div class="p-4 bg-blue-50 text-blue-700 rounded border border-blue-200 text-center animate-pulse"><p class="font-bold"><i class="fas fa-wrench"></i> 構文エラーを検知しました</p><p class="text-sm mt-1">AIエンジニアが自動修正しています...少々お待ちください。</p></div>`;
+                    
+                    try {
+                        const fixedData = await repairWithAI(data.mermaid, e.message, apiKey);
+                        const idFixed = 'mermaid-svg-fixed-' + Date.now();
+                        const { svg: fixedSvg } = await mermaid.render(idFixed, fixedData.mermaid);
+                        
+                        mContainer.innerHTML = ''; // ローディング消去
+                        const fixedDiv = document.createElement('div');
+                        fixedDiv.className = 'mermaid';
+                        fixedDiv.innerHTML = fixedSvg;
+                        mContainer.appendChild(fixedDiv);
+                        return; // 修復成功
+                        
+                    } catch (repairError) {
+                        console.error("Repair Failed:", repairError);
+                        // 修復失敗時のフォールバック表示
+                        mContainer.innerHTML = `<div class="p-4 bg-red-50 text-red-600 text-center text-sm rounded border border-red-200">
+                            <p class="font-bold">修復不能なエラー</p>
+                            <p class="mt-1">「再生成」ボタンを押してください。</p>
+                            <details class="mt-2 text-left"><summary>詳細</summary><pre class="text-xs overflow-auto mt-1">${data.mermaid}</pre></details>
+                        </div>`;
+                    }
+                } else {
+                    mContainer.innerHTML = `<div class="p-4 bg-red-50 text-red-600 text-center text-sm rounded">APIキーがないため自動修正できません。</div>`;
+                }
+            }
+        }
+
+        // 修復用APIコール
+        async function repairWithAI(brokenCode, errorMsg, apiKey) {
+            const prompt = `
+            あなたはMermaid記法の修復エンジニアです。
+            以下のコードは構文エラーにより描画できませんでした。
+            エラーメッセージ: "${errorMsg}"
+            
+            **壊れたコード:**
+            ${brokenCode}
+            
+            **修正ルール:**
+            1. ノードIDは英数字のみにする (日本語ID禁止)
+            2. テキストラベルは ["ラベル"] で囲む
+            3. 分岐は {} を使い、中は英数字のみにする
+            4. 矢印のラベルは -->|"ラベル"| の形式にする
+            5. JSON形式 {"mermaid": "修正後のコード"} だけを返してください。解説不要。
+            `;
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(jsonStr);
+        }
+    </script>
+</body>
+</html>
