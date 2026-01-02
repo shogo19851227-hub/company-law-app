@@ -10,39 +10,34 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; color: #334155; -webkit-tap-highlight-color: transparent; }
         
-        /* Navigation Bar */
         .nav-link { opacity: 0.7; transition: all 0.2s; padding: 0.5rem 0.8rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
         .nav-link:hover { opacity: 1; background-color: rgba(255,255,255,0.1); }
         .nav-link.active { opacity: 1; background-color: rgba(255,255,255,0.2); font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
         
-        /* Mobile Navigation adjustments */
         @media (max-width: 768px) {
-            .nav-text { display: none; } /* アイコンのみ表示 */
+            .nav-text { display: none; }
             .nav-link { padding: 0.5rem; }
         }
 
         /* Tree Styles */
         .tree-row { display: flex; align-items: center; margin-bottom: 4px; }
         .tree-toggle { 
-            width: 32px; height: 32px; /* タッチしやすいサイズ */
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; color: #94a3b8; transition: color 0.2s; 
-            flex-shrink: 0;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; color: #94a3b8; transition: color 0.2s; flex-shrink: 0;
+            z-index: 10;
         }
-        .tree-toggle:active { color: #3b82f6; background-color: #eff6ff; border-radius: 50%; }
+        .tree-toggle:hover { color: #3b82f6; }
         
         .tree-content { 
-            flex-grow: 1; padding: 10px 10px; border-radius: 8px; /* スマホ向けにパディング拡大 */
-            cursor: pointer; transition: all 0.2s; 
-            border-left: 3px solid transparent; 
-            display: flex; justify-content: space-between; align-items: center;
-            background-color: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            flex-grow: 1; padding: 10px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; 
+            border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center;
+            background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-left: 4px;
         }
         .tree-content:active { background-color: #f1f5f9; }
         .tree-content.selected { background-color: #eff6ff; border-left-color: #3b82f6; font-weight: bold; color: #1e40af; }
         
-        .tree-children { margin-left: 11px; border-left: 1px solid #e2e8f0; padding-left: 8px; }
+        .tree-children { margin-left: 18px; border-left: 1px solid #e2e8f0; padding-left: 8px; transition: all 0.2s ease-out; }
         .tree-children.hidden { display: none; }
 
         .rank-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: bold; white-space: nowrap; }
@@ -50,22 +45,16 @@
         .rank-B { background-color: #dbeafe; color: #1e40af; }
         .rank-C { background-color: #dcfce7; color: #166534; }
 
-        /* Drawer Animation */
         .drawer { transition: transform 0.3s ease-in-out; }
-        .drawer-overlay { transition: opacity 0.3s ease-in-out; }
-        
-        /* Accordion Style */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- Header & Navigation -->
     <header class="bg-slate-800 text-white shadow-md flex-shrink-0 z-30">
         <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <!-- Mobile Menu Button -->
                 <button onclick="toggleDrawer()" class="md:hidden text-white focus:outline-none p-1">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
@@ -74,113 +63,87 @@
                 </h1>
             </div>
             <nav class="flex gap-1 sm:gap-2 text-sm">
-                <a href="Structure_Navigator.html" class="nav-link active"><i class="fas fa-list-ul"></i> <span class="nav-text">目次</span></a>
+                <a href="index.html" class="nav-link active"><i class="fas fa-list-ul"></i> <span class="nav-text">目次</span></a>
                 <a href="Visual_Flow_App.html" class="nav-link"><i class="fas fa-project-diagram"></i> <span class="nav-text">図解</span></a>
                 <a href="flashcards.html" class="nav-link"><i class="fas fa-layer-group"></i> <span class="nav-text">暗記</span></a>
             </nav>
         </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden relative">
-        
-        <!-- Mobile Drawer Overlay -->
-        <div id="drawerOverlay" onclick="closeDrawer()" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10 hidden opacity-0 drawer-overlay"></div>
+        <div id="drawerOverlay" onclick="closeDrawer()" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10 hidden opacity-0 transition-opacity"></div>
 
-        <!-- Sidebar: Tree View (Drawer on Mobile) -->
         <div id="sidebar" class="absolute md:relative z-20 w-4/5 md:w-1/3 lg:w-1/4 h-full bg-white border-r border-gray-200 flex flex-col transform -translate-x-full md:translate-x-0 drawer shadow-xl md:shadow-none">
             
             <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center flex-shrink-0">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">MARKDOWN FILE</label>
-                    <p class="text-[10px] text-gray-400">* デフォルト目次読込済</p>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">目次構造</label>
+                    <p class="text-[10px] text-gray-400">* 階層・折りたたみ対応</p>
                 </div>
                 <button onclick="closeDrawer()" class="md:hidden text-gray-500 p-2"><i class="fas fa-times"></i></button>
             </div>
             
-            <!-- 上部固定エリア（APIキー、ファイル、検索） -->
-            <div class="bg-white border-b border-gray-200 sticky top-0 z-10 flex-shrink-0 overflow-y-auto max-h-[40vh]">
-                
-                <!-- API Settings (Moved to Top for Mobile Keyboard visibility) -->
-                <details class="group border-b border-gray-100">
+            <div class="bg-white border-b border-gray-200 sticky top-0 z-10 flex-shrink-0">
+                <details class="group border-b border-gray-100" open>
                     <summary class="flex justify-between items-center p-3 cursor-pointer bg-blue-50 text-blue-800 text-xs font-bold hover:bg-blue-100 transition">
-                        <span><i class="fas fa-key mr-2"></i>APIキー設定 (共通)</span>
+                        <span><i class="fas fa-key mr-2"></i>APIキー設定</span>
                         <span class="transition group-open:rotate-180"><i class="fas fa-chevron-down"></i></span>
                     </summary>
                     <div class="p-3 bg-gray-50">
                         <div class="flex gap-2">
-                            <input type="password" id="globalApiKey" placeholder="Gemini API Key..." class="flex-1 px-2 py-2 text-sm border border-gray-300 rounded">
-                            <button onclick="saveGlobalKey()" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 whitespace-nowrap">保存</button>
+                            <input type="password" id="globalApiKey" placeholder="Gemini API Key..." class="flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                            <button onclick="saveGlobalKey()" class="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition">保存</button>
                         </div>
-                        <p class="text-[10px] text-gray-500 mt-1">※ここで保存すると全アプリに反映されます</p>
                     </div>
                 </details>
 
-                <div class="p-4 pb-2">
-                    <input type="file" id="fileInput" class="hidden"/>
-                    <label for="fileInput" class="block w-full text-center text-xs text-gray-600 bg-gray-100 py-2 rounded cursor-pointer mb-2 hover:bg-gray-200 border border-gray-300">
-                        <i class="fas fa-file-upload mr-1"></i> ファイルを読み込む
-                    </label>
-                    <div class="flex gap-2">
-                        <input type="text" id="searchInput" placeholder="論点を検索..." class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="expandAll()" class="p-2 text-gray-500 hover:text-blue-600" title="すべて展開"><i class="fas fa-expand-arrows-alt"></i></button>
-                        <button onclick="collapseAll()" class="p-2 text-gray-500 hover:text-blue-600" title="すべて折りたたみ"><i class="fas fa-compress-arrows-alt"></i></button>
+                <div class="p-3 border-b border-gray-100 bg-white">
+                    <input type="text" id="searchInput" placeholder="論点を検索..." class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                    <div class="flex justify-between px-1">
+                        <button onclick="toggleAllNodes(true)" class="text-[10px] font-bold text-blue-600 hover:text-blue-800"><i class="fas fa-expand-arrows-alt mr-1"></i>すべて展開</button>
+                        <button onclick="toggleAllNodes(false)" class="text-[10px] font-bold text-gray-500 hover:text-gray-700"><i class="fas fa-compress-arrows-alt mr-1"></i>すべて閉じる</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Tree Container -->
-            <div id="treeContainer" class="flex-1 overflow-y-auto p-2 pb-20 md:pb-4">
-                <!-- Tree will be rendered here -->
-            </div>
+            <div id="treeContainer" class="flex-1 overflow-y-auto p-2 pb-20 md:pb-4"></div>
         </div>
 
-        <!-- Main Area: Content View -->
         <div class="flex-1 bg-white p-4 md:p-8 overflow-y-auto flex flex-col items-center justify-center text-center w-full" id="mainArea">
             <div id="welcomeMessage" class="max-w-md w-full">
-                <div class="w-16 h-16 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
-                    <i class="fas fa-book-open text-2xl md:text-3xl"></i>
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600">
+                    <i class="fas fa-book-open text-2xl"></i>
                 </div>
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">学習を開始</h2>
-                <p class="text-sm text-gray-500 mb-6">左上の三本線 (<i class="fas fa-bars"></i>) から論点を選択してください。</p>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">学習を開始</h2>
+                <p class="text-sm text-gray-500 mb-6">左側の目次から論点を選択してください。</p>
             </div>
 
             <div id="selectedContent" class="hidden w-full max-w-2xl text-left">
                 <div class="mb-6 border-b pb-4">
-                    <span id="detailRank" class="inline-block px-2 py-1 text-xs font-bold rounded mb-2">Rank A</span>
-                    <h2 id="detailTitle" class="text-2xl md:text-3xl font-bold text-gray-800 mb-1 leading-tight">論点タイトル</h2>
-                    <p id="detailPath" class="text-xs text-gray-400">第1章 > 第2節...</p>
+                    <span id="detailRank" class="inline-block px-2 py-1 text-xs font-bold rounded mb-2 text-white bg-gray-400">Rank -</span>
+                    <h2 id="detailTitle" class="text-xl md:text-2xl font-bold text-gray-800 mb-2 leading-tight"></h2>
+                    <div id="detailBreadcrumb" class="text-[10px] md:text-xs text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-100 italic leading-relaxed"></div>
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                    <!-- 修正: buttonタグからaタグに変更してiOS Documentsアプリでの遷移を確実にする -->
-                    <a href="Visual_Flow_App.html" class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-bold shadow-md active:transform active:scale-95 transition no-underline">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <a href="Visual_Flow_App.html" class="flex items-center justify-center gap-2 px-4 py-5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-bold shadow-lg active:transform active:scale-95 transition no-underline">
                         <i class="fas fa-project-diagram"></i> フロー図解を見る
                     </a>
-                    <a href="flashcards.html" class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-bold shadow-md active:transform active:scale-95 transition no-underline">
+                    <a href="flashcards.html" class="flex items-center justify-center gap-2 px-4 py-5 bg-green-600 text-white rounded-xl hover:bg-green-700 text-sm font-bold shadow-lg active:transform active:scale-95 transition no-underline">
                         <i class="fas fa-layer-group"></i> 暗記カードを解く
                     </a>
-                </div>
-                
-                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-gray-700">
-                    <strong><i class="fas fa-lightbulb text-yellow-500 mr-2"></i>学習のヒント</strong>
-                    <p class="mt-1 text-xs md:text-sm">ボタンを押すと、選択した論点に基づいてAIが教材を生成します。</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 translate-y-20 opacity-0 flex items-center gap-3 z-50 whitespace-nowrap">
         <i class="fas fa-check-circle text-green-400"></i>
-        <span id="toastMsg">Notification</span>
+        <span id="toastMsg"></span>
     </div>
 
     <script>
-        // --- PRE-LOADED DATA (Default Structure) ---
-        // ★重要: あなたが追加した目次データがある場合は、ここを書き換えてください
         const DEFAULT_MD_CONTENT = `
-
 # 第１章 会社法総論
 ## 第１節 会社の特徴
 ### １. 総論
@@ -7738,103 +7701,98 @@
 ### ４. 商号変更による通常の株式会社への移行 〔短答：Ｃ 論文：Ｄ〕
 #### （１） 株式会社への商号変更
 #### （２） 通常の株式会社への移行の登記
-
 `
 
-        // --- State ---
         let treeData = [];
-        let selectedNodeData = null;
 
-        // --- Markdown Parsing ---
         function parseMarkdown(mdContent) {
             const lines = mdContent.split('\n');
             const root = [];
             const stack = [{ level: 0, children: root }];
-            const rankRegex = /〔.*?(短答|論文)：([A-E]).*?〕/;
-            const simpleRankRegex = /Rank\s*([A-E])/i;
 
             lines.forEach(line => {
                 const match = line.match(/^(#+)\s+(.*)/);
                 if (match) {
                     const level = match[1].length;
                     const text = match[2].trim();
-                    let rank = null;
-                    let rankMatch = text.match(rankRegex);
-                    if (rankMatch) {
-                        rank = rankMatch[2];
-                    } else {
-                        rankMatch = text.match(simpleRankRegex);
-                        if(rankMatch) rank = rankMatch[1].toUpperCase();
-                    }
-                    const title = text.replace(/〔.*?〕/g, '').replace(/Rank\s*[A-E]/i, '').trim();
-                    const node = { title, level, rank, children: [], isOpen: false }; // Default closed
+                    const rankMatch = text.match(/〔.*?(短答|論文)：([Ａ-ＥA-E]).*?〕/);
+                    let rank = rankMatch ? rankMatch[2] : null;
+                    if(rank) rank = rank.replace(/[Ａ-Ｅ]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                    const cleanTitle = text.replace(/〔.*?〕/g, '').trim();
+                    
+                    const node = { title: cleanTitle, level, rank, children: [], isOpen: true, parent: null };
 
                     while (stack.length > 0 && stack[stack.length - 1].level >= level) stack.pop();
-                    if (stack.length > 0) stack[stack.length - 1].children.push(node);
+                    if (stack.length > 0) {
+                        node.parent = stack[stack.length - 1];
+                        stack[stack.length - 1].children.push(node);
+                    }
                     stack.push(node);
                 }
             });
             return root;
         }
 
-        // --- Rendering ---
+        function getFullContext(node) {
+            let path = [];
+            let current = node;
+            while (current && current.level > 0) {
+                path.unshift(current.title);
+                current = current.parent;
+            }
+            return path.join(' > ');
+        }
+
         function renderTree(nodes, container) {
             container.innerHTML = '';
             const ul = document.createElement('ul');
-            
             nodes.forEach(node => {
                 const li = document.createElement('li');
+                li.className = 'mb-1';
+                
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'tree-row';
 
-                const toggleSpan = document.createElement('span');
-                toggleSpan.className = 'tree-toggle';
-                
+                // Toggle Icon
+                const toggleBtn = document.createElement('div');
+                toggleBtn.className = 'tree-toggle';
+                if (node.children && node.children.length > 0) {
+                    toggleBtn.innerHTML = node.isOpen ? '<i class="fas fa-caret-down"></i>' : '<i class="fas fa-caret-right"></i>';
+                    toggleBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        node.isOpen = !node.isOpen;
+                        refreshTree();
+                    };
+                } else {
+                    toggleBtn.innerHTML = '<i class="fas fa-circle text-[4px] opacity-20"></i>';
+                    toggleBtn.style.cursor = 'default';
+                }
+
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'tree-content text-sm';
-                contentDiv.onclick = () => {
-                    selectNode(node, contentDiv);
-                    if(window.innerWidth < 768) closeDrawer(); // Mobile: close drawer on select
-                };
-                
-                if (selectedNodeData && selectedNodeData.title === node.title) contentDiv.classList.add('selected');
-
-                const titleSpan = document.createElement('span');
-                titleSpan.textContent = node.title;
-                contentDiv.appendChild(titleSpan);
-
+                contentDiv.innerHTML = `<span>${node.title}</span>`;
                 if (node.rank) {
                     const badge = document.createElement('span');
                     badge.className = `rank-badge rank-${node.rank}`;
                     badge.textContent = node.rank;
                     contentDiv.appendChild(badge);
                 }
+                
+                if (localStorage.getItem('gemini_tutor_topic')?.includes(node.title)) {
+                    // 簡易的な選択状態の復元（完全一致ではないが目安）
+                }
 
-                rowDiv.appendChild(toggleSpan);
+                contentDiv.onclick = () => selectNode(node, contentDiv);
+                
+                rowDiv.appendChild(toggleBtn);
                 rowDiv.appendChild(contentDiv);
                 li.appendChild(rowDiv);
 
                 if (node.children && node.children.length > 0) {
-                    toggleSpan.innerHTML = node.isOpen ? '<i class="fas fa-caret-down"></i>' : '<i class="fas fa-caret-right"></i>';
                     const childContainer = document.createElement('div');
                     childContainer.className = `tree-children ${node.isOpen ? '' : 'hidden'}`;
-                    
-                    toggleSpan.onclick = (e) => {
-                        e.stopPropagation();
-                        node.isOpen = !node.isOpen;
-                        if (node.isOpen) {
-                            childContainer.classList.remove('hidden');
-                            toggleSpan.innerHTML = '<i class="fas fa-caret-down"></i>';
-                        } else {
-                            childContainer.classList.add('hidden');
-                            toggleSpan.innerHTML = '<i class="fas fa-caret-right"></i>';
-                        }
-                    };
                     renderTree(node.children, childContainer);
                     li.appendChild(childContainer);
-                } else {
-                    toggleSpan.innerHTML = '<span style="width:10px;"></span>';
-                    toggleSpan.style.cursor = 'default';
                 }
                 ul.appendChild(li);
             });
@@ -7842,97 +7800,76 @@
         }
 
         function refreshTree() {
-            const container = document.getElementById('treeContainer');
-            if (treeData.length === 0) return;
-            renderTree(treeData, container);
+            renderTree(treeData, document.getElementById('treeContainer'));
         }
-        
-        function setAllOpen(nodes, isOpen) {
-            nodes.forEach(node => {
-                node.isOpen = isOpen;
-                if(node.children && node.children.length > 0) setAllOpen(node.children, isOpen);
-            });
-        }
-        function expandAll() { setAllOpen(treeData, true); refreshTree(); }
-        function collapseAll() { setAllOpen(treeData, false); refreshTree(); }
 
-        // --- Interaction ---
+        function toggleAllNodes(isOpen) {
+            function setOpen(nodes) {
+                nodes.forEach(n => {
+                    n.isOpen = isOpen;
+                    if (n.children) setOpen(n.children);
+                });
+            }
+            setOpen(treeData);
+            refreshTree();
+        }
+
         function selectNode(node, element) {
             document.querySelectorAll('.tree-content').forEach(el => el.classList.remove('selected'));
             element.classList.add('selected');
-            selectedNodeData = node;
+            
+            const fullContext = getFullContext(node);
+            localStorage.setItem('gemini_tutor_topic', fullContext);
+            localStorage.setItem('gemini_tutor_rank', node.rank || "A");
 
             document.getElementById('welcomeMessage').classList.add('hidden');
             const contentArea = document.getElementById('selectedContent');
             contentArea.classList.remove('hidden');
-
+            
             document.getElementById('detailTitle').textContent = node.title;
-            const rankText = node.rank ? `Rank ${node.rank}` : 'Rank -';
+            document.getElementById('detailBreadcrumb').textContent = fullContext;
+            
             const badge = document.getElementById('detailRank');
-            badge.textContent = rankText;
-            badge.className = `inline-block px-2 py-1 text-xs font-bold rounded mb-2 text-white ${
-                node.rank === 'A' ? 'bg-red-500' : node.rank === 'B' ? 'bg-blue-500' : node.rank === 'C' ? 'bg-green-500' : 'bg-gray-400'
-            }`;
-
-            document.getElementById('detailPath').textContent = "選択中の論点"; 
-            saveContext();
-        }
-
-        function saveContext() {
-            if (!selectedNodeData) return;
-            const topic = selectedNodeData.title;
-            const rank = selectedNodeData.rank || "A";
-            localStorage.setItem('gemini_tutor_topic', topic);
-            localStorage.setItem('gemini_tutor_rank', rank);
-            localStorage.setItem('gemini_tutor_timestamp', Date.now());
-            showToast(`「${topic}」を選択`);
+            badge.textContent = `Rank ${node.rank || '-'}`;
+            badge.className = `inline-block px-2 py-1 text-xs font-bold rounded mb-2 text-white ${node.rank === 'A' ? 'bg-red-500' : (node.rank === 'B' ? 'bg-blue-500' : 'bg-gray-400')}`;
+            
+            if(window.innerWidth < 768) closeDrawer();
+            showToast(`論点を選択しました`);
         }
 
         function saveGlobalKey() {
             const key = document.getElementById('globalApiKey').value;
-            if(key) {
-                localStorage.setItem('gemini_api_key', key);
-                showToast("APIキーを保存しました");
-            } else {
-                alert("APIキーを入力してください");
-            }
+            localStorage.setItem('gemini_api_key', key);
+            showToast("APIキーを保存しました");
+            document.querySelector('details.group').removeAttribute('open');
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
 
-        // --- Drawer Logic ---
         function toggleDrawer() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('drawerOverlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden', 'opacity-0');
-            } else {
-                closeDrawer();
-            }
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('drawerOverlay').classList.toggle('hidden');
+            document.getElementById('drawerOverlay').classList.toggle('opacity-0');
         }
         function closeDrawer() {
             document.getElementById('sidebar').classList.add('-translate-x-full');
             document.getElementById('drawerOverlay').classList.add('hidden', 'opacity-0');
         }
 
-        // --- File Handling ---
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    treeData = parseMarkdown(e.target.result);
-                    refreshTree();
-                    showToast("目次ファイルを読み込みました");
-                };
-                reader.readAsText(e.target.files[0]);
+        window.onload = () => {
+            treeData = parseMarkdown(DEFAULT_MD_CONTENT.trim());
+            refreshTree();
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if(savedKey) {
+                document.getElementById('globalApiKey').value = savedKey;
+                document.querySelector('details.group').removeAttribute('open');
             }
-        });
+        };
 
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
@@ -7942,23 +7879,6 @@
                 row.style.display = text.includes(term) ? 'flex' : 'none';
             });
         });
-
-        // --- INITIALIZATION ---
-        window.addEventListener('load', () => {
-            treeData = parseMarkdown(DEFAULT_MD_CONTENT);
-            refreshTree();
-            const savedKey = localStorage.getItem('gemini_api_key');
-            if(savedKey) {
-                document.getElementById('globalApiKey').value = savedKey;
-                // キーがある場合はアコーディオンを閉じたままにする（邪魔にならないように）
-                document.querySelector('details.group').removeAttribute('open');
-            } else {
-                // キーがない場合はアコーディオンを開いて気づかせる
-                document.querySelector('details.group').setAttribute('open', '');
-            }
-        });
-
     </script>
 </body>
-
 </html>
